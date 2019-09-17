@@ -4,7 +4,7 @@
 package gafolgo;
 
 /**
- * @author BenGr
+ * @author Benjamin Groman
  *
  */
 public class Gafolgo {
