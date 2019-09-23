@@ -24,6 +24,24 @@ class FloorQuadSnapshot {
 		machines = temp;
 	}
 	/**
+	 * This method produces a quadrant of the floor. It is intended for use when creating a derivative of an existing quadrant.
+	 * @param grid The grid to initialize the machines to.
+	 */
+	private FloorQuadSnapshot(Flavor[][] grid) {
+		machines = grid;
+	}
+	/**
+	 * This method produces a new quadrant with the machine at the given position replaced with the given flavor
+	 * @param newMachine The flavor of machine to insert
+	 * @param row The row of the machine to replace. Will be modulated by size.
+	 * @param col The column of the machine to replace. Will be modulated by size.
+	 */
+	public FloorQuadSnapshot replace(Flavor newMachine, int row, int col) {
+		Flavor[][] current = machines;
+		current[row%SIZE][col%SIZE] = newMachine;
+		return new FloorQuadSnapshot(current);
+	}
+	/**
 	 * This method generates a flavor of machine.
 	 * @return A randomly selected flavor of machine.
 	 */
