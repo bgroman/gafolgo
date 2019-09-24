@@ -3,6 +3,8 @@
  */
 package gafolgo;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * @author Benjamin GromanGr
  *
@@ -29,21 +31,99 @@ public class FloorManager implements Runnable {
 	 */
 	@Override
 	public void run() {
+		ThreadLocalRandom rand = ThreadLocalRandom.current();
+		final int size = FloorQuadSnapshot.SIZE;
 		//1 calculate metric
-		//2 pick two random locations
-		//3 if same flavor, go back to 2
-		//4 swap values
-		//5 recalculate metric
-		//6 if better or 10% chance, keep swap
-		//7 else revert
-		//8 10% chance to try to swap a quadrant
-		//9 if a 10 swaps since last draw, draw.
-		//10 go back to 2
-
+		int baseMetric = calculateFullMetric();
+		while (!Thread.interrupted()) {
+			final FloorQuadSnapshot[] fallbacks = {upLeft, upRight, downLeft, downRight};
+			//2 pick two random locations
+			final int row1 = rand.nextInt(size*2);
+			final int col1 = rand.nextInt(size*2);
+			final int row2 = rand.nextInt(size*2);
+			final int col2 = rand.nextInt(size*2);
+			//3 not worth checking at this time ---- if same flavor, go back to 2
+			//4 swap values
+			//find first value
+			final Flavor mac1;
+			if (row1 < size) {
+				if (col1 < size) {
+					mac1 = upLeft.machines[row1][col1];
+				}
+				else {
+					mac1 = upRight.machines[row1][col1-size];
+				}
+			}
+			else {
+				if (col1 < FloorQuadSnapshot.SIZE) {
+					mac1 = downLeft.machines[row1-size][col1];
+				}
+				else {
+					mac1 = downRight.machines[row1-size][col1-size];
+				}
+			}
+			//find second value and insert first value
+			final Flavor mac2;
+			if (row2 < size) {
+				if (col2 < size) {
+					mac2 = upLeft.machines[row2][col2];
+					upLeft = upLeft.replace(mac1, row2, col2);
+				}
+				else {
+					mac2 = upRight.machines[row2][col2-size];
+					upRight = upRight.replace(mac1, row2, col2-size);
+				}
+			}
+			else {
+				if (col2 < FloorQuadSnapshot.SIZE) {
+					mac2 = downLeft.machines[row2-size][col2];
+					downLeft = downLeft.replace(mac1, row2-size, col2);
+				}
+				else {
+					mac2 = downRight.machines[row2-size][col2-size];
+					downRight = downRight.replace(mac1, row2-size, col2-size);
+				}
+			}
+			//insert second value in first slot
+			if (row1 < size) {
+				if (col1 < size) {
+					upLeft = upLeft.replace(mac2, row1, col1);
+				}
+				else {
+					upRight = upRight.replace(mac2, row1, col1-size);
+				}
+			}
+			else {
+				if (col1 < FloorQuadSnapshot.SIZE) {
+					downLeft = downLeft.replace(mac2, row1-size, col1);
+				}
+				else {
+					downRight = downRight.replace(mac2, row1-size, col1-size);
+				}
+			}
+			//5 recalculate metric
+			final int newMetric = calculateFullMetric();
+			//6 if better or 10% chance, keep swap
+			if (newMetric > baseMetric || rand.nextInt(10)==0);//do nothing
+			//7 else revert
+			else {
+				upLeft = fallbacks[0];
+				upRight = fallbacks[1];
+				downLeft = fallbacks[2];
+				downRight = fallbacks[3];
+			}
+			//8 10% chance to try to swap a quadrant
+				//not yet implemented
+			//9 if 10 swaps since last draw, draw.
+				//not yet implemented
+			//10 go back to 2
+		}
 	}
 	/**
 	 * Calculates the benefit metric from scratch. This method takes the right and down affinities.
 	 * It assumes that calculateAffinity(X, Y) is the same as calculateAffinity(Y, X).
+	 * It can also be interpreted to mean that the benefit derived from a machine is based solely on the neighbors to the right and down,
+	 * in which case the prior assumption need not hold.
 	 */
 	int calculateFullMetric() {
 		int metric = 0;
