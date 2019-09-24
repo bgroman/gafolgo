@@ -11,9 +11,9 @@ class FloorQuadSnapshot {
 	/**
 	 * Size is the number of rows and the number of columns, not the number of machines.
 	 */
-	private static final int SIZE = 3;
-	private final Flavor[][] machines;
-	private final int exchangeSignature;
+	static final int SIZE = 3;
+	final Flavor[][] machines;
+	final int exchangeSignature;
 
 	/**
 	 * This method produces a random quadrant of the floor. It is intended for use when starting the program.
@@ -55,12 +55,6 @@ class FloorQuadSnapshot {
 		Flavor[][] current = machines;
 		current[row%SIZE][col%SIZE] = newMachine;
 		return new FloorQuadSnapshot(current);
-	}
-	/**
-	 * Two quadrants are interchangeable if and only if there signatures are the same.
-	 */
-	public int getExchangeSignature() {
-		return exchangeSignature;
 	}
 	/**
 	 * Provides a value for machines such that the sum of the values for a quadrant is unique.
