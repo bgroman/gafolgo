@@ -104,7 +104,10 @@ public class FloorManager implements Runnable {
 			//5 recalculate metric
 			final int newMetric = calculateFullMetric();
 			//6 if better or 10% chance, keep swap
-			if (newMetric > baseMetric || rand.nextInt(10)==0);//do nothing
+			if (newMetric > baseMetric || rand.nextInt(10)==0) {
+				//update metric
+				baseMetric = newMetric;
+			}
 			//7 else revert
 			else {
 				upLeft = fallbacks[0];
