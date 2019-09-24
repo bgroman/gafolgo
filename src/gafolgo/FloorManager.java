@@ -165,12 +165,12 @@ public class FloorManager implements Runnable {
 	private int calculateAffinity(Flavor machine, Flavor neighbor) {
 		if (machine == neighbor) return 0;
 		else if (machine == Flavor.Yellow) {
-			if (neighbor == Flavor.Red) return -100;
+			if (neighbor == Flavor.Red) return -10;
 			else if (neighbor == Flavor.Green) return 8;
 			else if (neighbor == Flavor.Blue) return 1;
 		}
 		else if (machine == Flavor.Red) {
-			if (neighbor == Flavor.Yellow) return -100;
+			if (neighbor == Flavor.Yellow) return -10;
 			else if (neighbor == Flavor.Green) return 50;
 			else if (neighbor == Flavor.Blue) return 25;
 		}
