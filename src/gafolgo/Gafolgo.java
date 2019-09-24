@@ -10,10 +10,11 @@ package gafolgo;
 public class Gafolgo {
 
 	/**
-	 * @param args
+	 * @param args not used.
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		//testing
+		System.out.println(new FloorManager(new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot()).calculateFullMetric());
 
 	}
 
