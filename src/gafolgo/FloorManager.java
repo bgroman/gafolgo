@@ -45,7 +45,7 @@ public class FloorManager implements Runnable {
 	 * Calculates the benefit metric from scratch. This method takes the right and down affinities.
 	 * It assumes that calculateAffinity(X, Y) is the same as calculateAffinity(Y, X).
 	 */
-	private int calculateFullMetric() {
+	int calculateFullMetric() {
 		int metric = 0;
 		final int size = FloorQuadSnapshot.SIZE;
 		final int size2 = size * 2;
