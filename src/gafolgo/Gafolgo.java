@@ -3,6 +3,8 @@
  */
 package gafolgo;
 
+import java.io.IOException;
+
 /**
  * @author Benjamin Groman
  *
@@ -14,8 +16,21 @@ public class Gafolgo {
 	 */
 	public static void main(String[] args) {
 		//testing
-		System.out.println(new FloorManager(new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot()).calculateFullMetric());
-
+		FloorManager fm = new FloorManager(new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot());
+		System.out.println(fm.calculateFullMetric());
+		Thread t = new Thread(fm);
+		t.setDaemon(true);
+		t.start();
+		//wait for user input to terminate
+		try {
+			//any input will do
+			System.in.read();
+		}
+		catch (IOException e) {
+			//might as well just end now anyway
+		}
+		t.interrupt();
+		System.out.println(fm.calculateFullMetric());
 	}
 
 }
