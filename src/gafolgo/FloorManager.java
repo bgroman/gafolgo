@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Benjamin GromanGr
  *
  */
-public class FloorManager implements Runnable {
+public class FloorManager extends Thread {
 
 	private FloorQuadSnapshot floor, bestFloor;
 	private int bestMetric;
@@ -20,6 +20,7 @@ public class FloorManager implements Runnable {
 		floor = fqs1;
 		bestFloor = fqs1;
 		bestMetric = calculateFullMetric();
+		setDaemon(true);
 	}
 
 	/**

@@ -18,9 +18,7 @@ public class Gafolgo {
 		//testing
 		FloorManager fm = new FloorManager(new FloorQuadSnapshot());
 		System.out.println(fm.getBestMetric());
-		Thread t = new Thread(fm);
-		t.setDaemon(true);
-		t.start();
+		fm.start();
 		//wait for user input to terminate
 		try {
 			//any input will do
@@ -29,7 +27,7 @@ public class Gafolgo {
 		catch (IOException e) {
 			//might as well just end now anyway
 		}
-		t.interrupt();
+		fm.interrupt();
 		System.out.println(fm.getBestMetric());
 	}
 
