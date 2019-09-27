@@ -163,14 +163,14 @@ public class FloorManager implements Runnable {
 	 * This method calculates the affinity for two machines. The order of the parameters is not supposed to make a difference.
 	 */
 	private int calculateAffinity(Flavor machine, Flavor neighbor) {
-		if (machine == neighbor) return 0;
+		if (machine == neighbor) return 10;
 		else if (machine == Flavor.Yellow) {
-			if (neighbor == Flavor.Red) return -10;
+			if (neighbor == Flavor.Red) return -1;
 			else if (neighbor == Flavor.Green) return 8;
 			else if (neighbor == Flavor.Blue) return 1;
 		}
 		else if (machine == Flavor.Red) {
-			if (neighbor == Flavor.Yellow) return -10;
+			if (neighbor == Flavor.Yellow) return -1;
 			else if (neighbor == Flavor.Green) return 50;
 			else if (neighbor == Flavor.Blue) return 25;
 		}
