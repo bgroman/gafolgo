@@ -16,8 +16,8 @@ public class Gafolgo {
 	 */
 	public static void main(String[] args) {
 		//testing
-		FloorManager fm = new FloorManager(new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot(), new FloorQuadSnapshot());
-		System.out.println(fm.calculateFullMetric());
+		FloorManager fm = new FloorManager(new FloorQuadSnapshot());
+		System.out.println(fm.getBestMetric());
 		Thread t = new Thread(fm);
 		t.setDaemon(true);
 		t.start();
@@ -30,7 +30,7 @@ public class Gafolgo {
 			//might as well just end now anyway
 		}
 		t.interrupt();
-		System.out.println(fm.calculateFullMetric());
+		System.out.println(fm.getBestMetric());
 	}
 
 }
