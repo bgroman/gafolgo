@@ -6,6 +6,7 @@ package gafolgo;
 import java.awt.Color;
 import java.awt.GridLayout;
 
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -25,7 +26,7 @@ class FloorPanel extends JPanel {
 	 * Creates a new FloorPanel that displays the given floor and metric.
 	 */
 	public FloorPanel(FloorQuadSnapshot floor, int metric) {
-		this.setLayout(new GridLayout(2, 1));
+		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		gridPanel = new JPanel(new GridLayout(SIZE, SIZE));
 		this.add(gridPanel);
 		tag = new JLabel();
