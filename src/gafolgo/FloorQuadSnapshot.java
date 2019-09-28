@@ -11,7 +11,7 @@ class FloorQuadSnapshot {
 	/**
 	 * Size is the number of rows and the number of columns, not the number of machines.
 	 */
-	static final int SIZE = 3;
+	static final int SIZE = 6;
 	final Flavor[][] machines;
 	final int exchangeSignature;
 
