@@ -16,9 +16,15 @@ public class Gafolgo {
 	 */
 	public static void main(String[] args) {
 		//testing
-		FloorManager fm = new FloorManager(new FloorQuadSnapshot());
-		System.out.println(fm.getBestMetric());
-		fm.start();
+		FloorManager[] fms = new FloorManager[10];
+		FloorQuadSnapshot startingFloor = new FloorQuadSnapshot();
+		for (int i = 0; i < fms.length; i++) {
+			fms[i] = new FloorManager(startingFloor);
+			System.out.println(fms[i].getBestMetric());
+		}
+		for (FloorManager fm : fms) {
+			fm.start();
+		}
 		//wait for user input to terminate
 		try {
 			//any input will do
@@ -27,8 +33,12 @@ public class Gafolgo {
 		catch (IOException e) {
 			//might as well just end now anyway
 		}
-		fm.interrupt();
-		System.out.println(fm.getBestMetric());
+		for (FloorManager fm : fms) {
+			fm.interrupt();
+		}
+		for (FloorManager fm : fms) {
+			System.out.println(fm.getBestMetric());
+		}
 	}
 
 }
