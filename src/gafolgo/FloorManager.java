@@ -49,8 +49,7 @@ public class FloorManager extends Thread {
 			//insert first value in second slot and insert second value in first slot
 			//replace returns a clone with the given tweak, so we can chain calls to it
 			final FloorQuadSnapshot newLayout = floor.replace(mac1, row2, col2).replace(mac2, row1, col1);
-			//5 recalculate metric
-			final int newMetric = calculateFullMetric(newLayout);
+			//5 recalculate metric (happens inside the function)
 			//6 if better or 5% chance, keep swap, else revert
 			keepBetter(newLayout, (rand.nextInt(20)==1));
 			//8 10% chance to try to swap a quadrant
@@ -84,6 +83,18 @@ public class FloorManager extends Thread {
 	 */
 	public FloorQuadSnapshot getBestLayout() {
 		return bestFloor;
+	}
+	/**
+	 * Returns the best metric found so far.
+	 */
+	public int getLastMetric() {
+		return metric;
+	}
+	/**
+	 * Returns the best layout found so far.
+	 */
+	public FloorQuadSnapshot getLastLayout() {
+		return floor;
 	}
 	/**
 	 * Updates the working state if the given layout is an improvement over the current working state.
