@@ -37,7 +37,7 @@ public class Gafolgo {
 			fm.interrupt();
 		}
 		for (FloorManager fm : fms) {
-			System.out.println(fm.getBestMetric());
+			System.out.println(fm.getLastMetric() + " < " + fm.getBestMetric());
 		}
 	}
 
