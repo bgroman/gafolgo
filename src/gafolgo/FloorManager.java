@@ -3,6 +3,7 @@
  */
 package gafolgo;
 
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -12,14 +13,16 @@ import java.util.concurrent.ThreadLocalRandom;
 public class FloorManager extends Thread {
 
 	private FloorQuadSnapshot floor, bestFloor;
-	private int bestMetric;
+	private int metric, bestMetric;
+	private static final Exchanger<FloorQuadSnapshot> SWAP_SPOT = new Exchanger<FloorQuadSnapshot>();
 	/**
-	 * Creates a floor manager with the given starting quadrant.
+	 * Creates a floor manager with the given starting quadrant. Fails if given null.
 	 */
 	public FloorManager(FloorQuadSnapshot fqs1) {
 		floor = fqs1;
 		bestFloor = fqs1;
-		bestMetric = calculateFullMetric();
+		metric = calculateFullMetric(fqs1);
+		bestMetric = metric;
 		setDaemon(true);
 	}
 
@@ -30,10 +33,8 @@ public class FloorManager extends Thread {
 	public void run() {
 		ThreadLocalRandom rand = ThreadLocalRandom.current();
 		final int size = FloorQuadSnapshot.SIZE;
-		//1 calculate metric
-		int baseMetric = calculateFullMetric();
-		while (!Thread.interrupted()) {
-			final FloorQuadSnapshot fallback = floor;
+		//1 calculate metric performed at construction
+		while (!interrupted()) {
 			//2 pick two random locations
 			final int row1 = rand.nextInt(size);
 			final int col1 = rand.nextInt(size);
@@ -43,33 +44,30 @@ public class FloorManager extends Thread {
 			//4 swap values
 			//find first value
 			final Flavor mac1 = floor.machines[row1][col1];
-			//find second value and insert first value
+			//find second value
 			final Flavor mac2 = floor.machines[row2][col2];
-			floor = floor.replace(mac1, row2, col2);
-			//insert second value in first slot
-			floor = floor.replace(mac2, row1, col1);
+			//insert first value in second slot and insert second value in first slot
+			//replace returns a clone with the given tweak, so we can chain calls to it
+			final FloorQuadSnapshot newLayout = floor.replace(mac1, row2, col2).replace(mac2, row1, col1);
 			//5 recalculate metric
-			final int newMetric = calculateFullMetric();
-			//6 if better or 10% chance, keep swap
-			if (newMetric > baseMetric) {
-				//update metric because its better
-				baseMetric = newMetric;
-				//keep best metric up to date
-				if (newMetric > bestMetric) {
-					bestMetric = newMetric;
-					bestFloor = floor;
+			final int newMetric = calculateFullMetric(newLayout);
+			//6 if better or 5% chance, keep swap, else revert
+			keepBetter(newLayout, (rand.nextInt(20)==1));
+			//8 10% chance to try to swap a quadrant
+			if (rand.nextInt(10)==1) {
+				try {
+					final FloorQuadSnapshot offer = SWAP_SPOT.exchange(floor);
+					//verify we're getting the same bag of machines before updating
+					if (floor.exchangeSignature == offer.exchangeSignature) {
+						//5% chance to keep it anyway
+						keepBetter(offer, (rand.nextInt(20)==1));
+					}
+				}
+				catch(InterruptedException e) {
+					//make sure we properly terminate the loop, since the exception will clear the status bit
+					this.interrupt();
 				}
 			}
-			else if (rand.nextInt(20)==1) {
-				//update metric even though its worse
-				baseMetric = newMetric;
-			}
-			//7 else revert
-			else {
-				floor = fallback;
-			}
-			//8 10% chance to try to swap a quadrant
-				//not yet implemented
 			//9 if 10 swaps since last draw, draw.
 				//not yet implemented
 			//10 go back to 2
@@ -88,26 +86,54 @@ public class FloorManager extends Thread {
 		return bestFloor;
 	}
 	/**
-	 * Calculates the benefit metric from scratch. This method takes the right and down affinities.
+	 * Updates the working state if the given layout is an improvement over the current working state.
+	 * Also keeps the best state up to date.
+	 * @param newLayout the potential new floor.
+	 * @param succeedAnyway if true, the newLayout will be used even if it isn't better.
+	 */
+	private void keepBetter(FloorQuadSnapshot newLayout, boolean succeedAnyway) {
+		final int newMetric = calculateFullMetric(newLayout);
+		if (newMetric > metric) {
+			//update metric because its better
+			metric = newMetric;
+			floor = newLayout;
+			//keep best metric up to date
+			if (newMetric > bestMetric) {
+				bestMetric = newMetric;
+				bestFloor = newLayout;
+			}
+		}
+		else if (succeedAnyway) {
+			//update metric even though its worse or the same
+			metric = newMetric;
+			floor = newLayout;
+		}
+		//7 else revert
+		else {
+			//actually nothing to do here because we only modify the state in this function
+		}
+	}
+	/**
+	 * Calculates the benefit metric from scratch. This method usess the right and down affinities.
 	 * It assumes that calculateAffinity(X, Y) is the same as calculateAffinity(Y, X).
 	 * It can also be interpreted to mean that the benefit derived from a machine is based solely on the neighbors to the right and down,
 	 * in which case the prior assumption need not hold.
 	 */
-	private int calculateFullMetric() {
+	private int calculateFullMetric(FloorQuadSnapshot floorQuad) {
 		int metric = 0;
 		final int edge = FloorQuadSnapshot.SIZE - 1;
 		for (int i = 0; i < edge; i++) {
 			//main affinities
 			for (int j = 0; j < edge; j++) {
 				//vertical
-				metric += calculateAffinity(floor.machines[i][j], floor.machines[i+1][j]);
+				metric += calculateAffinity(floorQuad.machines[i][j], floorQuad.machines[i+1][j]);
 				//horizontal
-				metric += calculateAffinity(floor.machines[i][j], floor.machines[i][j+1]);
+				metric += calculateAffinity(floorQuad.machines[i][j], floorQuad.machines[i][j+1]);
 			}
 			//right edge
-			metric += calculateAffinity(floor.machines[i][edge], floor.machines[i+1][edge]);
+			metric += calculateAffinity(floorQuad.machines[i][edge], floorQuad.machines[i+1][edge]);
 			//bottom edge
-			metric += calculateAffinity(floor.machines[edge][i], floor.machines[edge][i+1]);
+			metric += calculateAffinity(floorQuad.machines[edge][i], floorQuad.machines[edge][i+1]);
 		}
 		return metric;
 	}
