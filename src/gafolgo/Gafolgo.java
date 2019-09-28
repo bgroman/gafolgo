@@ -3,6 +3,8 @@
  */
 package gafolgo;
 
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -47,6 +49,7 @@ public class Gafolgo {
 	private static void initializeGUI(FloorManager[] fms) {
 		myFrame = new JFrame("Gafolgo");
 		myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		myFrame.setLayout(new GridLayout(4, 0, 20, 0));
 		for (FloorManager fm : fms) {
 			myFrame.getContentPane().add(new FloorPanel(fm.getBestLayout(), fm.getBestMetric()));
 		}

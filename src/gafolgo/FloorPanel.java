@@ -34,7 +34,7 @@ class FloorPanel extends JPanel {
 		
 		//initialize cells
 		for(int i = 0; i < cells.length; i++) {
-			cells[i] = new JLabel(" ");
+			cells[i] = new JLabel(" + ");
 			cells[i].setOpaque(true);
 			gridPanel.add(cells[i]);
 		}
