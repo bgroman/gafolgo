@@ -4,10 +4,8 @@
 package gafolgo;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 
-import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -27,7 +25,7 @@ class FloorPanel extends JPanel {
 	 * Creates a new FloorPanel that displays the given floor and metric.
 	 */
 	public FloorPanel(FloorQuadSnapshot floor, int metric) {
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		this.setLayout(new GridLayout(2, 1));
 		gridPanel = new JPanel(new GridLayout(SIZE, SIZE));
 		this.add(gridPanel);
 		tag = new JLabel();
@@ -35,8 +33,9 @@ class FloorPanel extends JPanel {
 		
 		//initialize cells
 		for(int i = 0; i < cells.length; i++) {
-			cells[i] = new JLabel();
-			cells[i].setMinimumSize(new Dimension(10, 10));
+			cells[i] = new JLabel(" ");
+			cells[i].setOpaque(true);
+			gridPanel.add(cells[i]);
 		}
 		//first painting
 		update(floor, metric);
