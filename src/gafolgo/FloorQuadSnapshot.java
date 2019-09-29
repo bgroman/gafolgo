@@ -11,7 +11,7 @@ class FloorQuadSnapshot {
 	/**
 	 * Size is the number of rows and the number of columns, not the number of machines.
 	 */
-	static final int SIZE = 6;
+	static final int SIZE = 8;
 	final Flavor[][] machines;
 	final int exchangeSignature;
 
@@ -120,7 +120,7 @@ class FloorQuadSnapshot {
 		return metric;
 	}
 	/**
-	 * This method calculates the affinity for two machines. The order of the parameters is not supposed to make a difference.
+	 * This method calculates the affinity for two machines. The order of the parameters now makes a difference.
 	 */
 	private static int calculateAffinity(Flavor machine, Flavor neighbor) {
 		if (machine == neighbor) return 10;
@@ -130,18 +130,18 @@ class FloorQuadSnapshot {
 			else if (neighbor == Flavor.Blue) return 1;
 		}
 		else if (machine == Flavor.Red) {
-			if (neighbor == Flavor.Yellow) return -1;
+			if (neighbor == Flavor.Yellow) return -2;
 			else if (neighbor == Flavor.Green) return 50;
 			else if (neighbor == Flavor.Blue) return 25;
 		}
 		else if (machine == Flavor.Green) {
-			if (neighbor == Flavor.Yellow) return 8;
+			if (neighbor == Flavor.Yellow) return 21;
 			else if (neighbor == Flavor.Red) return 50;
 			else if (neighbor == Flavor.Blue) return 20;
 		}
 		else if (machine == Flavor.Blue) {
-			if (neighbor == Flavor.Yellow) return 1;
-			else if (neighbor == Flavor.Red) return 25;
+			if (neighbor == Flavor.Yellow) return 11;
+			else if (neighbor == Flavor.Red) return 5;
 			else if (neighbor == Flavor.Green) return 20;
 		}
 		return 0;
