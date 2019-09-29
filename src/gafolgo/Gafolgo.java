@@ -28,7 +28,7 @@ public class Gafolgo {
 		}
 		initializeGUI(fms);
 		for (FloorManager fm : fms) {
-			//fm.start();
+			fm.start();
 		}
 		//wait for user input to terminate
 		try {
@@ -51,7 +51,9 @@ public class Gafolgo {
 		myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		myFrame.setLayout(new GridLayout(4, 0, 20, 0));
 		for (FloorManager fm : fms) {
-			myFrame.getContentPane().add(new FloorPanel(fm.getBestLayout(), fm.getBestMetric()));
+			FloorPanel panel = new FloorPanel(fm.getBestLayout(), fm.getBestMetric());
+			myFrame.getContentPane().add(panel);
+			fm.setPanel(panel);
 		}
 		myFrame.pack();
 		myFrame.setVisible(true);

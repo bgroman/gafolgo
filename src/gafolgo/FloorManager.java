@@ -15,13 +15,15 @@ public class FloorManager extends Thread {
 	private FloorQuadSnapshot floor, bestFloor;
 	private int metric, bestMetric;
 	private static final Exchanger<FloorQuadSnapshot> SWAP_SPOT = new Exchanger<FloorQuadSnapshot>();
+	private FloorPanel display = null;
+	private long lastDraw = 0;
 	/**
 	 * Creates a floor manager with the given starting quadrant. Fails if given null.
 	 */
 	public FloorManager(FloorQuadSnapshot fqs1) {
 		floor = fqs1;
 		bestFloor = fqs1;
-		metric = calculateFullMetric(fqs1);
+		metric = FloorQuadSnapshot.calculateFullMetric(fqs1);
 		bestMetric = metric;
 		setDaemon(true);
 	}
@@ -67,8 +69,10 @@ public class FloorManager extends Thread {
 					this.interrupt();
 				}
 			}
-			//9 if 10 swaps since last draw, draw.
-				//not yet implemented
+			//9 if display set and at least ~100 milliseconds since last draw, queue draw.
+			if (display != null && lastDraw + 100 < System.currentTimeMillis()) {
+				javax.swing.SwingUtilities.invokeLater(() -> {display.update(floor, metric);});
+			}
 			//10 go back to 2
 		}
 	}
@@ -103,7 +107,7 @@ public class FloorManager extends Thread {
 	 * @param succeedAnyway if true, the newLayout will be used even if it isn't better.
 	 */
 	private void keepBetter(FloorQuadSnapshot newLayout, boolean succeedAnyway) {
-		final int newMetric = calculateFullMetric(newLayout);
+		final int newMetric = FloorQuadSnapshot.calculateFullMetric(newLayout);
 		if (newMetric > metric) {
 			//update metric because its better
 			metric = newMetric;
@@ -124,56 +128,8 @@ public class FloorManager extends Thread {
 			//actually nothing to do here because we only modify the state in this function
 		}
 	}
-	/**
-	 * Calculates the benefit metric from scratch. This method usess the right and down affinities.
-	 * It assumes that calculateAffinity(X, Y) is the same as calculateAffinity(Y, X).
-	 * It can also be interpreted to mean that the benefit derived from a machine is based solely on the neighbors to the right and down,
-	 * in which case the prior assumption need not hold.
-	 */
-	private int calculateFullMetric(FloorQuadSnapshot floorQuad) {
-		int metric = 0;
-		final int edge = FloorQuadSnapshot.SIZE - 1;
-		for (int i = 0; i < edge; i++) {
-			//main affinities
-			for (int j = 0; j < edge; j++) {
-				//vertical
-				metric += calculateAffinity(floorQuad.machines[i][j], floorQuad.machines[i+1][j]);
-				//horizontal
-				metric += calculateAffinity(floorQuad.machines[i][j], floorQuad.machines[i][j+1]);
-			}
-			//right edge
-			metric += calculateAffinity(floorQuad.machines[i][edge], floorQuad.machines[i+1][edge]);
-			//bottom edge
-			metric += calculateAffinity(floorQuad.machines[edge][i], floorQuad.machines[edge][i+1]);
-		}
-		return metric;
-	}
-	/**
-	 * This method calculates the affinity for two machines. The order of the parameters is not supposed to make a difference.
-	 */
-	private int calculateAffinity(Flavor machine, Flavor neighbor) {
-		if (machine == neighbor) return 10;
-		else if (machine == Flavor.Yellow) {
-			if (neighbor == Flavor.Red) return -1;
-			else if (neighbor == Flavor.Green) return 8;
-			else if (neighbor == Flavor.Blue) return 1;
-		}
-		else if (machine == Flavor.Red) {
-			if (neighbor == Flavor.Yellow) return -1;
-			else if (neighbor == Flavor.Green) return 50;
-			else if (neighbor == Flavor.Blue) return 25;
-		}
-		else if (machine == Flavor.Green) {
-			if (neighbor == Flavor.Yellow) return 8;
-			else if (neighbor == Flavor.Red) return 50;
-			else if (neighbor == Flavor.Blue) return 20;
-		}
-		else if (machine == Flavor.Blue) {
-			if (neighbor == Flavor.Yellow) return 1;
-			else if (neighbor == Flavor.Red) return 25;
-			else if (neighbor == Flavor.Green) return 20;
-		}
-		return 0;
+	public void setPanel(FloorPanel panel) {
+		display = panel;
 	}
 
 }

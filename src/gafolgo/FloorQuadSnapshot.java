@@ -89,5 +89,56 @@ class FloorQuadSnapshot {
 			return Flavor.Yellow;
 		}
 	}
+	/**
+	 * Calculates the benefit metric from scratch. This method usess the right and down affinities.
+	 * It assumes that calculateAffinity(X, Y) is the same as calculateAffinity(Y, X).
+	 * It can also be interpreted to mean that the benefit derived from a machine is based solely on the neighbors to the right and down,
+	 * in which case the prior assumption need not hold.
+	 */
+	public static int calculateFullMetric(FloorQuadSnapshot floorQuad) {
+		int metric = 0;
+		final int edge = FloorQuadSnapshot.SIZE - 1;
+		for (int i = 0; i < edge; i++) {
+			//main affinities
+			for (int j = 0; j < edge; j++) {
+				//vertical
+				metric += calculateAffinity(floorQuad.machines[i][j], floorQuad.machines[i+1][j]);
+				//horizontal
+				metric += calculateAffinity(floorQuad.machines[i][j], floorQuad.machines[i][j+1]);
+			}
+			//right edge
+			metric += calculateAffinity(floorQuad.machines[i][edge], floorQuad.machines[i+1][edge]);
+			//bottom edge
+			metric += calculateAffinity(floorQuad.machines[edge][i], floorQuad.machines[edge][i+1]);
+		}
+		return metric;
+	}
+	/**
+	 * This method calculates the affinity for two machines. The order of the parameters is not supposed to make a difference.
+	 */
+	private static int calculateAffinity(Flavor machine, Flavor neighbor) {
+		if (machine == neighbor) return 10;
+		else if (machine == Flavor.Yellow) {
+			if (neighbor == Flavor.Red) return -1;
+			else if (neighbor == Flavor.Green) return 8;
+			else if (neighbor == Flavor.Blue) return 1;
+		}
+		else if (machine == Flavor.Red) {
+			if (neighbor == Flavor.Yellow) return -1;
+			else if (neighbor == Flavor.Green) return 50;
+			else if (neighbor == Flavor.Blue) return 25;
+		}
+		else if (machine == Flavor.Green) {
+			if (neighbor == Flavor.Yellow) return 8;
+			else if (neighbor == Flavor.Red) return 50;
+			else if (neighbor == Flavor.Blue) return 20;
+		}
+		else if (machine == Flavor.Blue) {
+			if (neighbor == Flavor.Yellow) return 1;
+			else if (neighbor == Flavor.Red) return 25;
+			else if (neighbor == Flavor.Green) return 20;
+		}
+		return 0;
+	}
 
 }
