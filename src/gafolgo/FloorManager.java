@@ -3,25 +3,29 @@
  */
 package gafolgo;
 
+import java.util.concurrent.Exchanger;
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * @author Benjamin GromanGr
  *
  */
-public class FloorManager implements Runnable {
+public class FloorManager extends Thread {
 
-	private FloorQuadSnapshot upLeft;
-	private FloorQuadSnapshot upRight;
-	private FloorQuadSnapshot downLeft;
-	private FloorQuadSnapshot downRight;
+	private FloorQuadSnapshot floor, bestFloor;
+	private int metric, bestMetric;
+	private static final Exchanger<FloorQuadSnapshot> SWAP_SPOT = new Exchanger<FloorQuadSnapshot>();
+	private FloorPanel display = null;
+	private long lastDraw = 0;
 	/**
-	 * Creates a floor manager with the given starting quadrants.
-	 * Quadrants are given in the order upper left, upper right, lower left, lower right.
+	 * Creates a floor manager with the given starting quadrant. Fails if given null.
 	 */
-	public FloorManager(FloorQuadSnapshot fqs1, FloorQuadSnapshot fqs2, FloorQuadSnapshot fqs3, FloorQuadSnapshot fqs4) {
-		upLeft = fqs1;
-		upRight = fqs2;
-		downLeft = fqs3;
-		downRight = fqs4;
+	public FloorManager(FloorQuadSnapshot fqs1) {
+		floor = fqs1;
+		bestFloor = fqs1;
+		metric = FloorQuadSnapshot.calculateFullMetric(fqs1);
+		bestMetric = metric;
+		setDaemon(true);
 	}
 
 	/**
@@ -29,79 +33,106 @@ public class FloorManager implements Runnable {
 	 */
 	@Override
 	public void run() {
-		//1 calculate metric
-		//2 pick two random locations
-		//3 if same flavor, go back to 2
-		//4 swap values
-		//5 recalculate metric
-		//6 if better or 10% chance, keep swap
-		//7 else revert
-		//8 10% chance to try to swap a quadrant
-		//9 if a 10 swaps since last draw, draw.
-		//10 go back to 2
-
+		ThreadLocalRandom rand = ThreadLocalRandom.current();
+		final int size = FloorQuadSnapshot.SIZE;
+		//1 calculate metric performed at construction
+		while (!interrupted()) {
+			//2 pick two random locations
+			final int row1 = rand.nextInt(size);
+			final int col1 = rand.nextInt(size);
+			final int row2 = rand.nextInt(size);
+			final int col2 = rand.nextInt(size);
+			//3 not worth checking at this time ---- if same flavor, go back to 2
+			//4 swap values
+			//find first value
+			final Flavor mac1 = floor.machines[row1][col1];
+			//find second value
+			final Flavor mac2 = floor.machines[row2][col2];
+			//insert first value in second slot and insert second value in first slot
+			//replace returns a clone with the given tweak, so we can chain calls to it
+			final FloorQuadSnapshot newLayout = floor.replace(mac1, row2, col2).replace(mac2, row1, col1);
+			//5 recalculate metric (happens inside the function)
+			//6 if better or 5% chance, keep swap, else revert
+			keepBetter(newLayout, (rand.nextInt(20)==1));
+			//8 10% chance to try to swap a quadrant
+			if (rand.nextInt(10)==1) {
+				try {
+					final FloorQuadSnapshot offer = SWAP_SPOT.exchange(floor);
+					//verify we're getting the same bag of machines before updating
+					if (floor.exchangeSignature == offer.exchangeSignature) {
+						//5% chance to keep it anyway
+						keepBetter(offer, (rand.nextInt(20)==1));
+					}
+				}
+				catch(InterruptedException e) {
+					//make sure we properly terminate the loop, since the exception will clear the status bit
+					this.interrupt();
+				}
+			}
+			//9 if display set and at least ~1000 milliseconds since last draw, queue draw.
+			if (display != null && lastDraw + 1000 < System.currentTimeMillis()) {
+				javax.swing.SwingUtilities.invokeLater(() -> {display.update(floor, metric);});
+				lastDraw = System.currentTimeMillis();
+			}
+			//10 go back to 2
+			//waiting between swaps to avoid total load of the system.
+			try {sleep(5);} catch(InterruptedException e) {this.interrupt();}
+		}
 	}
 	/**
-	 * Calculates the benefit metric from scratch. This method takes the right and down affinities.
-	 * It assumes that calculateAffinity(X, Y) is the same as calculateAffinity(Y, X).
+	 * Returns the best metric found so far.
 	 */
-	int calculateFullMetric() {
-		int metric = 0;
-		final int size = FloorQuadSnapshot.SIZE;
-		final int size2 = size * 2;
-		final int edge = size2 - 1;
-		//create an array with all the machines
-		Flavor[][] floor = new Flavor[size2][size2];
-		//this implementation is not optimized for memory management, but rather for loop complexity
-		for (int i = 0; i < size; i++) {
-			for (int j = 0; j < size; j++) {
-				floor[i][j] = upLeft.machines[i][j];
-				floor[i][j + size] = upRight.machines[i][j];
-				floor[i + size][j] = downLeft.machines[i][j];
-				floor[i + size][j + size] = downRight.machines[i][j];
-			}
-		}
-		for (int i = 0; i < edge; i++) {
-			//main affinities
-			for (int j = 0; j < edge; j++) {
-				//vertical
-				metric += calculateAffinity(floor[i][j], floor[i+1][j]);
-				//horizontal
-				metric += calculateAffinity(floor[i][j], floor[i][j+1]);
-			}
-			//right edge
-			metric += calculateAffinity(floor[i][edge], floor[i+1][edge]);
-			//bottom edge
-			metric += calculateAffinity(floor[edge][i], floor[edge][i+1]);
-		}
+	public int getBestMetric() {
+		return bestMetric;
+	}
+	/**
+	 * Returns the best layout found so far.
+	 */
+	public FloorQuadSnapshot getBestLayout() {
+		return bestFloor;
+	}
+	/**
+	 * Returns the best metric found so far.
+	 */
+	public int getLastMetric() {
 		return metric;
 	}
 	/**
-	 * This method calculates the affinity for two machines. The order of the parameters is not supposed to make a difference.
+	 * Returns the best layout found so far.
 	 */
-	private int calculateAffinity(Flavor machine, Flavor neighbor) {
-		if (machine == neighbor) return 0;
-		else if (machine == Flavor.Yellow) {
-			if (neighbor == Flavor.Red) return -100;
-			else if (neighbor == Flavor.Green) return 8;
-			else if (neighbor == Flavor.Blue) return 1;
+	public FloorQuadSnapshot getLastLayout() {
+		return floor;
+	}
+	/**
+	 * Updates the working state if the given layout is an improvement over the current working state.
+	 * Also keeps the best state up to date.
+	 * @param newLayout the potential new floor.
+	 * @param succeedAnyway if true, the newLayout will be used even if it isn't better.
+	 */
+	private void keepBetter(FloorQuadSnapshot newLayout, boolean succeedAnyway) {
+		final int newMetric = FloorQuadSnapshot.calculateFullMetric(newLayout);
+		if (newMetric > metric) {
+			//update metric because its better
+			metric = newMetric;
+			floor = newLayout;
+			//keep best metric up to date
+			if (newMetric > bestMetric) {
+				bestMetric = newMetric;
+				bestFloor = newLayout;
+			}
 		}
-		else if (machine == Flavor.Red) {
-			if (neighbor == Flavor.Yellow) return -100;
-			else if (neighbor == Flavor.Green) return 50;
-			else if (neighbor == Flavor.Blue) return 25;
+		else if (succeedAnyway) {
+			//update metric even though its worse or the same
+			metric = newMetric;
+			floor = newLayout;
 		}
-		else if (machine == Flavor.Green) {
-			if (neighbor == Flavor.Yellow) return 8;
-			else if (neighbor == Flavor.Red) return 50;
-			else if (neighbor == Flavor.Blue) return 20;
+		//7 else revert
+		else {
+			//actually nothing to do here because we only modify the state in this function
 		}
-		else if (machine == Flavor.Blue) {
-			if (neighbor == Flavor.Yellow) return 1;
-			else if (neighbor == Flavor.Red) return 25;
-			else if (neighbor == Flavor.Green) return 20;
-		}
-		return 0;
+	}
+	public void setPanel(FloorPanel panel) {
+		display = panel;
 	}
 
 }
