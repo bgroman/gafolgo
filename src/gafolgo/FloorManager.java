@@ -69,11 +69,14 @@ public class FloorManager extends Thread {
 					this.interrupt();
 				}
 			}
-			//9 if display set and at least ~100 milliseconds since last draw, queue draw.
-			if (display != null && lastDraw + 100 < System.currentTimeMillis()) {
+			//9 if display set and at least ~1000 milliseconds since last draw, queue draw.
+			if (display != null && lastDraw + 1000 < System.currentTimeMillis()) {
 				javax.swing.SwingUtilities.invokeLater(() -> {display.update(floor, metric);});
+				lastDraw = System.currentTimeMillis();
 			}
 			//10 go back to 2
+			//waiting between swaps to avoid total load of the system.
+			try {sleep(5);} catch(InterruptedException e) {this.interrupt();}
 		}
 	}
 	/**
