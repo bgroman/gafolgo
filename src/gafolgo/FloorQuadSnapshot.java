@@ -52,7 +52,13 @@ class FloorQuadSnapshot {
 	 * @param col The column of the machine to replace. Will be modulated by size.
 	 */
 	public FloorQuadSnapshot replace(Flavor newMachine, int row, int col) {
-		Flavor[][] current = machines;
+		Flavor[][] current =  new Flavor[SIZE][SIZE];
+		for (int i = 0; i < machines.length && i < SIZE; i++) {
+			for (int j = 0; j < machines[i].length && j < SIZE; j++)
+			{
+				current[i][j] = machines[i][j];
+			}
+		}
 		current[row%SIZE][col%SIZE] = newMachine;
 		return new FloorQuadSnapshot(current);
 	}
