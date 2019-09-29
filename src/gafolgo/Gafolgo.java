@@ -15,12 +15,13 @@ import javax.swing.JFrame;
  */
 public class Gafolgo {
 	private static JFrame myFrame;
+	private static final int numThreads = 32;
 	/**
 	 * @param args not used.
 	 */
 	public static void main(String[] args) {
 		//testing
-		FloorManager[] fms = new FloorManager[10];
+		FloorManager[] fms = new FloorManager[numThreads];
 		FloorQuadSnapshot startingFloor = new FloorQuadSnapshot();
 		for (int i = 0; i < fms.length; i++) {
 			fms[i] = new FloorManager(startingFloor);
