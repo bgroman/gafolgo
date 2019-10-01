@@ -85,8 +85,9 @@ public class Gafolgo {
 		//make sure closing the GUI terminates the whole program
 		myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		//calculate a reasonably optimal number of rows for the given number of threads
-		//target a square, but explicitly round down because the floor panels are vertically-oriented
-		final int rows = (int)Math.floor(Math.sqrt(numThreads));
+		//try to make a square, but explicitly round down because the floor panels are vertically-oriented
+		//cap at (64 / (FloorPanel.SIZE + 1)) because that's the approximate max my screen can handle without squeezing the tags 
+		final int rows = (int)Math.min((64 / (FloorPanel.SIZE + 1)), Math.floor(Math.sqrt(numThreads)));
 		//create a layout with the number of rows from above, any number of columns, 20 pixels horizontal gap, and no vertical gap
 		myFrame.setLayout(new GridLayout(rows, 0, 20, 0));
 		
