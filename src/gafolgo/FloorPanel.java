@@ -76,7 +76,7 @@ class FloorPanel extends JPanel {
 		int index = 0;
 		//update the layout display
 		for(int row = 0; row < SIZE; row++) {
-			for (int col = 0; col < SIZE; row++) {
+			for (int col = 0; col < SIZE; col++) {
 				//background should be the color corresponding to the machine at this location
 				cells[index].setBackground(getColor(floor.machine(row, col)));
 				//keep the cell index on track
